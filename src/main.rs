@@ -1,6 +1,10 @@
 use clap::{Arg, Command};
 use std::net::SocketAddr;
 
+use crate::server::init_server;
+
+pub mod server;
+
 fn main() {
     let arguments = Command::new("p2p-server")
         .arg(Arg::new("period")
@@ -28,4 +32,6 @@ fn main() {
     if let Some(str) = arguments.get_one::<String>("connect") {
         let connect: SocketAddr = str.parse().expect("Invalid connect address");
     }
+
+    let _ = init_server(port);
 }
