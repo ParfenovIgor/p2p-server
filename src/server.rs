@@ -15,7 +15,9 @@ struct AppState {
 async fn connect(data: web::Data<AppState>, item: web::Json<ArgInput>) -> HttpResponse {
     let mut peers = data.peers.lock().unwrap();
     println!("Received request for connection from \"{}\"", item.address);
-    let response = serde_json::json!(*peers);
+    let response = serde_json::json!({
+        "peers": *peers
+    });
     (*peers).push(item.address);
     HttpResponse::Ok().json(response)
 }
@@ -26,7 +28,7 @@ async fn ping(_data: web::Data<AppState>, item: web::Json<ArgInput>) -> HttpResp
 }
 
 #[actix_web::main]
-pub async fn init_server(port: usize, peers: Arc<Mutex<Vec<SocketAddr>>>) -> std::io::Result<()> {
+pub async fn init_server(port: u64, peers: Arc<Mutex<Vec<SocketAddr>>>) -> std::io::Result<()> {
     let shared_state = web::Data::new(AppState {
         peers: peers
     });
