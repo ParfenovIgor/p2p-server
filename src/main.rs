@@ -1,9 +1,13 @@
 use clap::{Arg, Command};
 use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 use crate::server::init_server;
+use crate::update::update;
 
 pub mod server;
+pub mod update;
 
 fn main() {
     let arguments = Command::new("p2p-server")
@@ -26,12 +30,18 @@ fn main() {
             .help("Specifies the ip address and the port of the server, to which this server has to connect"))
         .get_matches();
 
-    let period: usize = arguments.get_one::<String>("period").unwrap().trim().parse().expect("Invalid period number");
+    let period: u64 = arguments.get_one::<String>("period").unwrap().trim().parse().expect("Invalid period number");
     let port: usize = arguments.get_one::<String>("port").unwrap().trim().parse().expect("Invalid port number");
+    
+    let peers = Arc::new(Mutex::new(Vec::<SocketAddr>::new()));
+    let peers_clone = Arc::clone(&peers);
+    let _ = thread::spawn(move || {
+        update(period, peers_clone);
+    });
 
     if let Some(str) = arguments.get_one::<String>("connect") {
         let connect: SocketAddr = str.parse().expect("Invalid connect address");
     }
 
-    let _ = init_server(port);
+    let _ = init_server(port, peers);
 }
