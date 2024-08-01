@@ -1,6 +1,6 @@
-use actix_web::{web, App, HttpServer, HttpResponse};
-use std::net::SocketAddr;
+use actix_web::{web, App, HttpResponse, HttpServer};
 use serde::Deserialize;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 #[derive(Deserialize)]
@@ -14,7 +14,11 @@ struct AppState {
 
 async fn connect(data: web::Data<AppState>, item: web::Json<ArgInput>) -> HttpResponse {
     let mut peers = data.peers.lock().unwrap();
-    println!("Received request for connection from \"{}\"", item.address);
+    println!(
+        "# {} - Received request for connection from \"{}\"",
+        chrono::Local::now().format("%H:%M:%S"),
+        item.address
+    );
     let response = serde_json::json!({
         "peers": *peers
     });
@@ -23,15 +27,17 @@ async fn connect(data: web::Data<AppState>, item: web::Json<ArgInput>) -> HttpRe
 }
 
 async fn ping(_data: web::Data<AppState>, item: web::Json<ArgInput>) -> HttpResponse {
-    println!("Received message from \"{}\"", item.address);
+    println!(
+        "# {} - Received message from \"{}\"",
+        chrono::Local::now().format("%H:%M:%S"),
+        item.address
+    );
     HttpResponse::Ok().finish()
 }
 
 #[actix_web::main]
 pub async fn init_server(port: u64, peers: Arc<Mutex<Vec<SocketAddr>>>) -> std::io::Result<()> {
-    let shared_state = web::Data::new(AppState {
-        peers: peers
-    });
+    let shared_state = web::Data::new(AppState { peers: peers });
 
     HttpServer::new(move || {
         App::new()
