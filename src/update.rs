@@ -12,11 +12,21 @@ pub fn update(period: u64, port: u64, peers: Arc<Mutex<Vec<SocketAddr>>>) {
         let list = peers.lock().unwrap();
         for address in list.iter() {
             let url: String = format!("http://{}/ping", address);
-            let _ = client.post(url)
+            let _ = client
+                .post(url)
                 .header(reqwest::header::CONTENT_TYPE, "application/json")
                 .body(data.to_string())
                 .send();
         }
-        println!("Sending message to {:?}", list);
+        println!(
+            "# {} - Sending message to {}",
+            chrono::Local::now().format("%H:%M:%S"),
+            format!(
+                "{:?}",
+                list.iter()
+                    .map(|addr| format!("{}", addr))
+                    .collect::<Vec<String>>()
+            )
+        );
     }
 }
